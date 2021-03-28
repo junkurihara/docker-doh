@@ -1,0 +1,77 @@
+version: "3"
+services:
+  ## If another nginx instance is needed.
+  # nginx-doh:
+  #   image: nginx:alpine
+  #   container_name: nginx-doh
+  #   restart: unless-stopped
+  #   tty: false
+  #   env_file: ./.env
+  #   expose:
+  #     - ${VIRTUAL_PORT}
+  #   links:
+  #     - doh-proxy
+  #     - unbound
+  #   logging:
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
+  #   volumes:
+  #     - ./config/nginx/conf.d:/etc/nginx/conf.d
+  #     - ./config/nginx/tmp:/var/tmp/nginx:ro
+  #   networks:
+  #     net-:
+  #     net-doh:
+
+  doh-proxy:
+    image: jqtype/doh-proxy
+    container_name: doh-proxy
+    build:
+      context: ./doh/
+      # args:
+      #   - GIT_USER=${GIT_USER}
+      #   - GIT_TOKEN=${GIT_TOKEN}
+    restart: unless-stopped
+    env_file: .env
+    expose:
+      - 3000/udp
+      - 3000/tcp
+    volumes:
+      - ./.env:/opt/doh-proxy/etc/.env
+    networks:
+      net-front:
+      net-doh:
+
+  unbound:
+    image: jqtype/unbound
+    container_name: unbound
+    build:
+      context: ./unbound/
+    restart: unless-stopped
+    env_file: ./.env
+    expose:
+      - ${UPSTREAM_PORT}/udp
+      - ${UPSTREAM_PORT}/tcp
+    networks:
+      net-doh:
+        ipv4_address: ${UPSTREAM_ADDR}
+    volumes:
+      - .env:/opt/unbound/etc/.env
+
+  # watchtower:
+  #   image: containrrr/watchtower
+  #   container_name: watchtower
+  #   command: unbound doh-proxy --interval 30
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  net-front:
+    external: true
+  net-doh:
+    name: net-doh
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.1.0/24

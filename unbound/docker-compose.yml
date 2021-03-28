@@ -1,0 +1,20 @@
+version: "3"
+services:
+  unbound:
+    image: jqtype/unbound
+    container_name: unbound
+    build:
+      context: ./
+    restart: unless-stopped
+    ports:
+      - 53/udp
+      - 53/tcp
+    # volumes:
+    #   - ./.env:/opt/doh-proxy/etc/.env
+
+  # watchtower:
+  #   image: containrrr/watchtower
+  #   container_name: watchtower
+  #   command: dnscrypt-server --interval 30
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
