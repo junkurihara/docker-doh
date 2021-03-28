@@ -36,7 +36,7 @@ COPY entrypoint.sh /
 
 RUN chmod 755 /entrypoint.sh
 
-EXPOSE 443/udp 443/tcp
+EXPOSE 3000/udp 3000/tcp
 
 CMD ["/entrypoint.sh"]
 
